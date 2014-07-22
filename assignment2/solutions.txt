@@ -1,0 +1,82 @@
+Problem 1
+
+a.
+SELECT count(*) FROM frequency WHERE docid="10398_txt_earn";
+
+b.
+SELECT count(*) FROM (
+    SELECT term FROM frequency WHERE docid="10398_txt_earn" AND count=1
+) x;
+
+c.
+SELECT count(*) FROM (
+    SELECT term FROM frequency WHERE docid="10398_txt_earn" AND count=1
+    UNION
+    SELECT term FROM frequency WHERE docid="925_txt_trade" AND count=1
+) x;
+
+d.
+SELECT count(*) FROM (
+    SELECT DISTINCT docid FROM frequency WHERE term="parliament"
+) x;
+
+e.
+SELECT count(*) FROM (
+    SELECT DISTINCT docid FROM frequency 
+    GROUP BY docid HAVING sum(count)>300
+) x;
+
+f.
+SELECT count(*) FROM (
+    SELECT DISTINCT docid FROM frequency WHERE term IN ("transactions")
+    AND docid IN (
+        SELECT DISTINCT docid FROM frequency WHERE term="world"
+    )
+) x;
+
+SELECT count(*) FROM (
+    (SELECT DISTINCT docid FROM frequency WHERE term="transactions") a
+    INNER JOIN
+    (SELECT DISTINCT docid FROM frequency WHERE term="world") b
+    ON a.docid=b.docid
+) x;
+
+
+Problem 2
+
+g.
+SELECT sum(term) FROM (
+    SELECT A.row_num, B.col_num, A.value*B.value as term
+    FROM A,B
+    WHERE A.col_num=B.row_num
+)
+WHERE row_num=2 AND col_num=3;
+
+
+Problem 3
+
+h.
+SELECT sum(count) AS similarity FROM (
+    SELECT f1.docid AS doc1, f2.docid AS doc2, f1.count*f2.count AS count
+    FROM frequency f1, frequency f2
+    WHERE f1.term=f2.term
+)
+WHERE doc1='10080_txt_crude' AND doc2='17035_txt_earn';
+
+i.
+CREATE VIEW query AS
+SELECT 'q' as docid, 'washington' as term, 1 as count 
+UNION
+SELECT 'q' as docid, 'taxes' as term, 1 as count
+UNION 
+SELECT 'q' as docid, 'treasury' as term, 1 as count;
+
+SELECT doc1, max(similarity) FROM (
+    SELECT doc1, sum(count) AS similarity FROM (
+        SELECT f1.docid AS doc1, f2.docid AS doc2, f1.count*f2.count AS count
+        FROM frequency f1, query f2
+        WHERE f1.term=f2.term
+    )
+    GROUP BY doc1
+);
+
